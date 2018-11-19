@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Map</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scale=no">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <style>
+            #map {
+                height:100%;
+            }
+            html, body{
+                height:100%;
+                margin:0;
+                padding: 0;
+            }
+        </style>
+         <a href="/details?id=<%=id%>" class="btn btn-default" style="margin:5px;">Go Back</a>
+    </head>
+    <body>
+        <div id="map"></div>
+            <script type="text/javascript">
+                var name = <%=name%>
+                function initMap(){
+                    var myLatLon = {
+                        lat:<%= lat %>,
+                        lng:<%= lon %>
+                    };
+
+                    var map = new google.maps.Map(document.getElementById('map'),{
+                        zoom: 18,
+                        center: myLatLon
+                    });
+
+                    var marker = new google.maps.Marker({
+                        position:myLatLon,
+                        map:map,
+                        title:name
+                    });
+                }
+            </script>
+           
+            <script type="text/javascript" async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-TFe6jJAWvPO4uTmXh9___CWEWhqcf9o&callback=initMap"></script>
+       
+    </body>
+</html>

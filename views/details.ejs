@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Details</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+            <table class="table">
+                <tbody>
+                <tr><td><h2 style="font-style: italic;"><%=result.name%></h2></td></tr>
+                    <% if (result.photo){ %>      
+                    <tr><td><img src="data:<%=result.mimetype%>;base64,<%=result.photo%>" alt="Photo" class="img-responsive"></td></tr>         
+                    <%}%>
+            
+                <tr><td><label>Cuisine:</label> <%=result.cuisine%></td></tr>
+                <tr><td><label>Borough:</label> <%=result.borough%></td></tr>
+                <tr><td><label>Street:</label> <%=result.address.street%></td></tr> 
+                <tr><td><label>Building:</label> <%=result.address.building%></td></tr>               
+                <tr><td><label>Zip code:</label> <%=result.address.zipcode%></td></tr>     
+                <tr><td><label>GPS:</label> <%='[ '+result.address.coord.lat+' , '+result.address.coord.lon+' ]'%></td></tr>              
+                <tr><td><label>Rating:</label>
+                <ol class="list-group">
+                    <% for (const i in result.grades){%>
+                        <li class="list-group-item"><%=result.grades[i].score%>(<%=result.grades[i].user%>)</li>
+                    <%}%>
+                </ol>
+                </td></tr>
+                <tr><td><label>Created By: </label><%=result.owner%></p></td></tr> 
+                 </tbody>
+            </table>
+            <div style="margin-bottom:30px;margin-left:10px;">
+            <% if(result.address.coord.lat && result.address.coord.lon){ %>
+                <p><a href="/map?id=<%=result._id%>&name=<%=result.name%>&lat=<%=result.address.coord.lat%>&lon=<%=result.address.coord.lon%>" class="btn btn-default">Google Map</a></p>
+            <%}%>
+            <div class="btn-group ">
+            <a href="/rate?id=<%=result._id%>" class="btn btn-default">Rate</a>
+            <% if(result.owner === username){%>
+                <a href="/edit?id=<%=result._id%>" class="btn btn-default">Edit</a>
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="delete" id="btn-del">Delete</button>
+            <%}%>
+            <a href="/read" class="btn btn-default">Go Back</a>
+            </div>
+        </div>
+        <div class="modal fade" id="delete" role="dialog" show="false" data-dropback="static" data-keyboard="false"> 
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" id="btn-cross">&times;</button>
+                        <h4>Info</h4>
+                    </div>
+                    <div class="modal-body" id="mbody">
+                    
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-default" id="btn-close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).ready(function(){
+                $('#btn-del').click(function(){
+                    $.get({url:"/delete?id=<%=result._id%>", 
+                    success:function(result, status){
+                        //alert(JSON.stringify(result), status);
+                       document.getElementById("mbody").innerHTML = '<p>'+ result.result +'</p>';
+                       $('#delete').modal('show');
+                    }, error:function(error){
+                        document.getElementById("mbody").innerHTML = '<p>'+ error.result +'</p>';
+                       $('#delete').modal('show');
+                    }
+                });
+                $('#btn-close').click (function(){
+                    $("#delete").modal('hide');
+                    window.location.replace("/read");
+                
+                });
+                $('#btn-cross').click (function(){
+                    $("#delete").modal('hide');
+                    window.location.replace("/read");
+                
+                });
+                });
+            });
+                
+        </script>
+    </body>
+</html>

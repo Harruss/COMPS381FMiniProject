@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <form action="/login" method="POST" enctype="multipart/form-data" style="margin:10px;">
+            <div class="form-group">User name: <input type="text" name="userid" class="form-control" pattern='^\S+$'></div>
+            <div class="form-group">Password: <input type="text" name="pw" class="form-control" pattern='^\S+$'></div>
+            <input type="submit" value="Login" class="btn btn-default">
+        </form>
+        <a href="/signup" class="btn btn-default" style="margin-left:10px;">Sign Up</a>
+        <p style="margin:10px;"><%=result%></p>
+    </body>
+</html>

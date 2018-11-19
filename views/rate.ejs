@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Rate</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <form style="padding-top:10px" action="/rate?id=<%=id%>" method="POST" enctype="multipart/form-data">
+            <div class="form-group" style="margin-left:10px">Score: <input type="number" name="score" min="1" max="10" required pattern="\S+" class="form-controller"></div>
+            <div class="form-group" style="margin-left:10px"><input type="submit" class="btn btn-default"></div>
+        </form>
+        <a href="/details?id=<%=id%>" class="btn btn-default" style="margin-left:10px">Go Back</a>
+         <p style="margin-left:10px;"><%=result%></p>
+    </body>
+</html>

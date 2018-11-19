@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Restaurant</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <div class="jumbotron text-center">
+            <h1> User: <%=username %></h1> 
+            <a href="/logout" class="btn btn-default">Logout</a>
+        </div>
+            <div class="form-group form-inline" style="margin-left:10px;margin-bottom:10px;">
+             <a href="/createRestaurant" class="btn btn-default">Create NewRecord</a>
+            <input type="text" id="search-data" class="form-control">
+            <select class="form-control" id="selection">
+                <option value="name">Name</option>
+                <option value="cuisine">Cuisine</option>
+                <option value="borough">Borough</option>
+            </select>
+            <button type="button" class="btn btn-default" id="search">Search</button>
+        </div>
+       
+        <div>
+           <table class="table">
+                <tbody id="search-tb">
+                    <% if (typeof restaurants == 'string'){ %>
+                        <tr><p><%=restaurants%></p> </tr>
+                     <%} else { restaurants.forEach(res => { %>
+                    
+                        <tr>
+                            <td><a href="/details?id=<%=res._id%>"><%=res.name%></a></td>
+                        </tr>
+                 
+                    <% }) }%>
+                </tbody>
+           </table>      
+        </div>
+         <script>
+            $(document).ready(function(){
+            $('#search').click(function(){
+                var s_option = $('#selection option:selected').val();
+                var value = $('#search-data').val();
+                var temp = {};
+                temp[s_option] = value;
+                var datas  = ($.trim(temp[s_option]) == "") ? {} : temp;
+                //alert(JSON.stringify(datas));
+                $.ajax({type:'POST',
+                url:'/read', 
+                contentType: "application/json",
+                data:JSON.stringify(datas),
+                success:function(result){
+                    //alert("Result: "+JSON.stringify(result));
+                    if (typeof result != 'string'){
+                        var formatData = '<tbody id="search-tb">'; 
+                        for(key in result){
+                            formatData += '<tr><td><a href="/details?id='+ result[key]._id + '">'+result[key].name+'</a></td></tr>';
+                        }
+                        formatData += '</tbody>';
+                         $(formatData).replaceAll("#search-tb");
+                    } else {
+                        $('<tbody id="search-tb"><tr><td>'+result+'</td></tr></tabody>').replaceAll("#search-tb");
+                    }
+                },
+                fail:function(err){
+                    alert(err);
+                }});
+            });
+            });     
+        </script>
+    </body>
+</html>

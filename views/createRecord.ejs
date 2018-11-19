@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Create New Record</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="css/style.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <form action="/createRestaurant" method="POST" enctype="multipart/form-data" style="margin:10px;">
+            <div class="form-group">Name: <input type="text" name="name" required pattern="^\S$|^\S[\s\S]*\S$" class="form-control"><br></div>
+            <div class="form-group">Borough: <input type="text" name="borough" class="form-control"><br></div>
+            <div class="form-group">Cuisine: <input type="text" name="cuisine" class="form-control"><br></div>
+            <div class="form-group">Street: <input type="text" name="street" class="form-control"><br></div>
+            <div class="form-group">Building: <input type="text" name="building" class="form-control"><br></div>
+            <div class="form-group">Zip Code: <input type="text" name="zipcode" class="form-control"><br></div>
+            <div class="form-group">GPS Coordinates(lat.): <input type="number" name="lat" class="form-control"><br></div>
+            <div class="form-group">GPS Coordinates(lon.): <input type="number" name="lon" class="form-control"><br></div>
+            <div class="form-group">Photo: <input type="file" name="photo" class="form-control"></div>
+            <input type="submit" class="btn btn-default">
+        </form>
+        <a href="/read" class="btn btn-default" style="margin-left:10px; margin-bottom:30px;">Go Back</a>
+    </body>
+</html>
