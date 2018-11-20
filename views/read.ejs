@@ -30,7 +30,7 @@
            <table class="table">
                 <tbody id="search-tb">
                     <% if (typeof restaurants == 'string'){ %>
-                        <tr><p><%=restaurants%></p> </tr>
+                        <tr><td><p style="margin:10px;"><%=restaurants%></p></td></tr>
                      <%} else { restaurants.forEach(res => { %>
                     
                         <tr>
@@ -54,8 +54,8 @@
                 url:'/read', 
                 contentType: "application/json",
                 data:JSON.stringify(datas),
-                success:function(result){
-                    //alert("Result: "+JSON.stringify(result));
+                success:function(result,status, xhr){
+                    alert("Result: "+JSON.stringify(xhr.getResponseHeader('content-type').indexOf('text/html')) + "Result: "+ result);
                     if (typeof result != 'string'){
                         var formatData = '<tbody id="search-tb">'; 
                         for(key in result){
@@ -63,8 +63,10 @@
                         }
                         formatData += '</tbody>';
                          $(formatData).replaceAll("#search-tb");
+                    } else if(xhr.getResponseHeader('content-type').indexOf('text/html')>-1){
+                       window.location.href = '/login';
                     } else {
-                        $('<tbody id="search-tb"><tr><td>'+result+'</td></tr></tabody>').replaceAll("#search-tb");
+                         $('<tbody id="search-tb"><tr><td>'+result+'</td></tr></tabody>').replaceAll("#search-tb");
                     }
                 },
                 fail:function(err){

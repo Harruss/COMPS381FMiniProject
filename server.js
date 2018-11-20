@@ -19,31 +19,30 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 app.use(session({
-    keys: ['username', 'authorized']
+    keys: ['username', 'authorized'],
+    maxAge: 0.5 * 60 * 1000
 }));
 app.set('view engine', 'ejs');
-// app.use(function (req, res, next) {
-//     if (req.session.hasOwnProperty("authorized")) {
-//         if (req.session.authorized) {
-//             next();
-//         } else {
-//             res.render('login', {
-//                 result: ''
-//             });
-//         }
-//     } else {
-//         res.render('login', {
-//             result: ''
-//         });
-//     }
-// });
+app.use(function (req, res, next) {
+    console.log("Session :" + JSON.stringify(req.session) + " Checking: " + req.session.isPopulated);
+    if (!req.session.isPopulated && (req.path != '/login' && req.path != '/signup')) {
+        console.log("Session expired");
+        res.render('login', {
+            result: ''
+        });
+        return
+    }
+    next();
+});
 app.use('/api/restaurant/create/:username', function (req, res, next) {
-    if (req.params.username) {
+    if (req.params.username && req.body.name) {
         //console.log(req.params.username);
         req.session.username = req.params.username;
         next();
     } else {
-        res.status(200).end("Please insert your username");
+        res.status(200).end(JSON.stringify({
+            status: 'failed'
+        }));
     }
 });
 
@@ -94,17 +93,19 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                 });
                 //console.log(JSON.stringify("rData structure: " + JSON.stringify(rData.file)));
             } else {
-                rData.body.photo.replace(/^[file//]/, "");
+                rData.body.photo = rData.body.photo.replace("file://", "");
                 fs.open(rData.body.photo, 'r', function (err, result) {
                     if (err) {
                         console.log(err.message);
                         return;
                     }
                     let buf = new Buffer(100000);
-                    fs.read(result, buf, 0, 100000, null, function (err, data) {
+                    fs.readFile(result, function (err, data) {
                         assertion(err);
+                        console.log("Buffer: " + data);
+
                         rData.file.buffer = data;
-                        rData.file.mimetype = path.extname(rData.body.photo);
+                        rData.file.mimetype = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
                         createNewRecord(db, constructDocument(rData), function (result, doc) {
                             if (result) {
                                 res.status(200).end(JSON.stringify({
@@ -142,7 +143,7 @@ app.get('/api/restaurant/read/:key/:value', function (req, res, next) {
     });
 });
 /*----------------------Login & Logout-------------------------------------------- */
-app.route('/login').get(function (req, res) {
+app.route('/login').get(function (req, res, next) {
     if (req.session.hasOwnProperty("authorized")) {
         if (req.session.authorized === true) {
             res.redirect('/read');
@@ -151,7 +152,7 @@ app.route('/login').get(function (req, res) {
     res.render('login', {
         result: ''
     });
-}).post(upload.none(), function (req, res) {
+}).post(upload.none(), function (req, res, next) {
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
         console.log('Connected to MongoDB');
@@ -172,27 +173,27 @@ app.route('/login').get(function (req, res) {
     });
 });
 
-app.route("/").get(function (req, res) {
+app.route("/").get(function (req, res, next) {
     res.redirect('/login');
 }).post(function (req, res) {
     res.redirect('/login');
 });
 
-app.get('/logout', function (req, res) {
+app.get('/logout', function (req, res, next) {
     req.session = null;
     res.redirect('/login');
 });
 
 /*-----------------------------------Sign Up---------------------------------------*/
 
-app.route('/signup').get(function (req, res) {
+app.route('/signup').get(function (req, res, next) {
     if (req.session.hasOwnProperty('authorized') && req.session.authorized === true) {
         res.redirect('/read');
     }
     res.render('signup', {
         result: ''
     });
-}).post(upload.none(), function (req, res) {
+}).post(upload.none(), function (req, res, next) {
     console.log("Sign post: " + JSON.stringify(req.body));
     if (req.body.username && req.body.pw) {
         MongoClient.connect(mongoURL, function (err, client) {
@@ -220,7 +221,7 @@ app.route('/signup').get(function (req, res) {
 
 /*-----------------------------------CRUD----------------------------------------- */
 //Get all restaurant from database
-app.route('/read').get(function (req, res) {
+app.route('/read').get(function (req, res, next) {
     console.log("Read GET");
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
@@ -241,7 +242,7 @@ app.route('/read').get(function (req, res) {
             }
         });
     });
-}).post(upload.none(), function (req, res) {
+}).post(upload.none(), function (req, res, next) {
     console.log("Read POST");
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
@@ -261,7 +262,7 @@ app.route('/read').get(function (req, res) {
 });
 
 //Get details from database
-app.get('/details', function (req, res) {
+app.get('/details', function (req, res, next) {
     console.log("Details");
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
@@ -284,7 +285,7 @@ app.get('/details', function (req, res) {
 });
 
 //Create Records
-app.route('/createRestaurant').get(function (req, res) {
+app.route('/createRestaurant').get(function (req, res, next) {
     res.render('createRecord');
 }).post(upload.single('photo'), function (req, res) {
     MongoClient.connect(mongoURL, function (err, client) {
@@ -297,12 +298,12 @@ app.route('/createRestaurant').get(function (req, res) {
     });
 });
 
-app.route('/rate').get(function (req, res) {
+app.route('/rate').get(function (req, res, next) {
     res.render('rate', {
         id: req.query.id,
         result: ''
     });
-}).post(upload.none(), function (req, res) {
+}).post(upload.none(), function (req, res, next) {
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
@@ -326,7 +327,7 @@ app.route('/rate').get(function (req, res) {
 });
 
 //Modify information
-app.route('/edit').get(function (req, res) {
+app.route('/edit').get(function (req, res, next) {
     if (req.session.authorized) {
         res.render('edit', {
             id: req.query.id,
@@ -340,7 +341,7 @@ app.route('/edit').get(function (req, res) {
             result: "You have no permission to edit this page."
         });
     }
-}).post(upload.single('photo'), function (req, res) {
+}).post(upload.single('photo'), function (req, res, next) {
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
@@ -363,7 +364,7 @@ app.route('/edit').get(function (req, res) {
 });
 
 //Remove Records
-app.route('/delete').get(function (req, res) {
+app.route('/delete').get(function (req, res, next) {
     MongoClient.connect(mongoURL, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
@@ -387,7 +388,7 @@ app.route('/delete').get(function (req, res) {
     });
 });
 
-app.get('/map', function (req, res) {
+app.get('/map', function (req, res, next) {
     res.render('map', {
         lat: req.query.lat,
         lon: req.query.lon,
@@ -587,7 +588,7 @@ function constructDocument(req) {
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
     if (req.file) {
-        rawData['photo'] = new Buffer(req.file.buffer).toString('base64');
+        rawData['photo'] = req.file.buffer.toString('base64');
         rawData['mimetype'] = req.file.mimetype;
     } else {
         rawData['photo'] = null;
