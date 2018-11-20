@@ -24,16 +24,17 @@ app.use(session({
 app.set('view engine', 'ejs');
 // app.use(function (req, res, next) {
 //     if (req.session.hasOwnProperty("authorized")) {
-//         if (req.session.authorized === true) {
-//             res.redirect('/read');
+//         if (req.session.authorized) {
 //             next();
 //         } else {
-//             res.redirect('/login');
-//             next()
+//             res.render('login', {
+//                 result: ''
+//             });
 //         }
 //     } else {
-//         res.redirect('/login');
-//         next();
+//         res.render('login', {
+//             result: ''
+//         });
 //     }
 // });
 app.use('/api/restaurant/create/:username', function (req, res, next) {
