@@ -20,7 +20,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(session({
     keys: ['username', 'authorized'],
-    maxAge: parseFloat(10 * 1000)
+    maxAge: parseFloat(10 * 60 * 1000)
 }));
 app.set('view engine', 'ejs');
 app.use(function (req, res, next) {
