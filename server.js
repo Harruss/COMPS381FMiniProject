@@ -85,7 +85,7 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                 getImageFromURL(rData.body.photo, function (result, mime) {
                     rData.file.buffer = result
                     rData.file.mimetype = mime;
-                    console.log(JSON.stringify(rData));
+                    //console.log(JSON.stringify(rData));
                     createNewRecord(db, constructDocument(rData), function (result, doc) {
                         if (result) {
                             res.status(200).end(JSON.stringify({
@@ -160,7 +160,9 @@ app.route('/login').get(function (req, res, next) {
         result: ''
     });
 }).post(upload.none(), function (req, res, next) {
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         console.log('Connected to MongoDB');
         var db = client.db('mproject');
@@ -203,7 +205,9 @@ app.route('/signup').get(function (req, res, next) {
 }).post(upload.none(), function (req, res, next) {
     console.log("Sign post: " + JSON.stringify(req.body));
     if (req.body.username && req.body.pw) {
-        MongoClient.connect(mongoURL, function (err, client) {
+        MongoClient.connect(mongoURL, {
+            useNewUrlParser: true
+        }, function (err, client) {
             assertion(err);
             let db = client.db('mproject');
             signup(db, req.body, function (result, msg = null) {
@@ -230,25 +234,28 @@ app.route('/signup').get(function (req, res, next) {
 //Get all restaurant from database
 app.route('/read').get(function (req, res, next) {
     console.log("Read GET");
-    MongoClient.connect(mongoURL, function (err, client) {
-        assertion(err);
-        let db = client.db('mproject');
-        //retrieving data from database
-        retrieveData(db, {}, function (result, docs = 'No Record to show here!') {
-            client.close();
-            if (result) {
-                res.render('read', {
-                    username: req.session.username,
-                    restaurants: docs
-                });
-            } else {
-                res.render('read', {
-                    username: req.session.username,
-                    restaurants: docs
-                });
-            }
+    MongoClient.connect(mongoURL, {
+            useNewUrlParser: true
+        },
+        function (err, client) {
+            assertion(err);
+            let db = client.db('mproject');
+            //retrieving data from database
+            retrieveData(db, {}, function (result, docs = 'No Record to show here!') {
+                client.close();
+                if (result) {
+                    res.render('read', {
+                        username: req.session.username,
+                        restaurants: docs
+                    });
+                } else {
+                    res.render('read', {
+                        username: req.session.username,
+                        restaurants: docs
+                    });
+                }
+            });
         });
-    });
 }).post(upload.none(), function (req, res, next) {
     console.log("Read POST");
     MongoClient.connect(mongoURL, {
@@ -273,7 +280,9 @@ app.route('/read').get(function (req, res, next) {
 //Get details from database
 app.get('/details', function (req, res, next) {
     console.log("Details");
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
         getDetails(db, {
@@ -297,23 +306,29 @@ app.get('/details', function (req, res, next) {
 app.route('/createRestaurant').get(function (req, res, next) {
     res.render('createRecord');
 }).post(upload.single('photo'), function (req, res) {
-    MongoClient.connect(mongoURL, function (err, client) {
-        let db = client.db('mproject');
-        let rData = constructDocument(req);
-        console.log(JSON.stringify(rData));
-        createNewRecord(db, rData, function (result) {
-            res.redirect('/read');
+    MongoClient.connect(mongoURL, {
+            useNewUrlParser: true
+        },
+        function (err, client) {
+            let db = client.db('mproject');
+            let rData = constructDocument(req);
+            console.log(JSON.stringify(rData));
+            createNewRecord(db, rData, function (result) {
+                res.redirect('/read');
+            });
         });
-    });
 });
 
+//Rate
 app.route('/rate').get(function (req, res, next) {
     res.render('rate', {
         id: req.query.id,
         result: ''
     });
 }).post(upload.none(), function (req, res, next) {
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
 
@@ -351,7 +366,9 @@ app.route('/edit').get(function (req, res, next) {
         });
     }
 }).post(upload.single('photo'), function (req, res, next) {
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
         editRecord(db, {
@@ -374,7 +391,9 @@ app.route('/edit').get(function (req, res, next) {
 
 //Remove Records
 app.route('/delete').get(function (req, res, next) {
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
         deleteRecords(db, ObjectId(req.query.id), function (result) {
@@ -397,6 +416,7 @@ app.route('/delete').get(function (req, res, next) {
     });
 });
 
+//Go to map
 app.get('/map', function (req, res, next) {
     res.render('map', {
         lat: req.query.lat,
@@ -557,7 +577,9 @@ function updateScore(db, data, callback) {
 //Edit Record
 function editRecord(db, data, callback) {
     let feedBack = handlingEdition(data.data);
-    if (!feedBack) {
+    if (feedBack) {
+        console.log("Edit Record: " + (feedBack));
+
         db.collection('restaurant').updateOne({
             '_id': data.id
         }, {
@@ -597,7 +619,6 @@ function assertion(err) {
 function constructDocument(req) {
     let rawData = new Object();
     console.log("Construct Document:" + JSON.stringify(req.file));
-
     rawData['name'] = req.body.name;
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
@@ -619,6 +640,7 @@ function constructDocument(req) {
     };
     rawData['grades'] = [];
     rawData['owner'] = req.session.username;
+    console.log("Construct Document:" + JSON.stringify(rawData));
     return rawData;
 }
 
