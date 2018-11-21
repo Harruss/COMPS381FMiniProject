@@ -20,15 +20,15 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(session({
     keys: ['username', 'authorized'],
-    maxAge: (10 * 60 * 1000)
+    maxAge: parseFloat(10 * 1000)
 }));
 app.set('view engine', 'ejs');
 app.use(function (req, res, next) {
     //console.log("Session :" + JSON.stringify(req.session) + " Checking: " + req.session.isPopulated + " req.headers: " + JSON.stringify(req.headers));
-    //console.log(new Date(Date.now()).getTime().toString());
+    //console.log("Max Age: " + req.sessionOptions.expires);
 
     if (!req.session.isPopulated && (req.path != '/login' && req.path != '/signup')) {
-        console.log("Session expired");
+        //console.log("Session expired: " + JSON.stringify(req.session));
         //console.log("Req checking: " + (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax'));
         if (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax') {
             res.status(200).send("/login");
@@ -556,18 +556,23 @@ function updateScore(db, data, callback) {
 
 //Edit Record
 function editRecord(db, data, callback) {
-    db.collection('restaurant').updateOne({
-        '_id': data.id
-    }, {
-        $set: handlingEdition(data.data)
-    }, function (err, result) {
-        assertion(err);
-        if (result.result.ok === 1) {
-            callback(true);
-        } else {
-            callback(false);
-        }
-    });
+    let feedBack = handlingEdition(data.data);
+    if (!feedBack) {
+        db.collection('restaurant').updateOne({
+            '_id': data.id
+        }, {
+            $set: feedBack
+        }, function (err, result) {
+            assertion(err);
+            if (result.result.ok === 1) {
+                callback(true);
+            } else {
+                callback(false);
+            }
+        });
+    } else {
+        callback(true)
+    }
 }
 
 //Delete document
