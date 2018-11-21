@@ -649,9 +649,10 @@ function getImageFromURL(imageURL, callback) {
     req.end();
 }
 
+//Check the lat.'s and lon.'s data type
 function checkFloat(data) {
     let temp = parseFloat(data);
-    return temp ? temp : null;
+    return temp ? temp : "";
 }
 
 // function handlingData(data) {
