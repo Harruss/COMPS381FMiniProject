@@ -20,17 +20,25 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(session({
     keys: ['username', 'authorized'],
-    maxAge: 10 * 60 * 1000
+    maxAge: (10 * 60 * 1000)
 }));
 app.set('view engine', 'ejs');
 app.use(function (req, res, next) {
-    console.log("Session :" + JSON.stringify(req.session) + " Checking: " + req.session.isPopulated);
+    //console.log("Session :" + JSON.stringify(req.session) + " Checking: " + req.session.isPopulated + " req.headers: " + JSON.stringify(req.headers));
+    //console.log(new Date(Date.now()).getTime().toString());
+
     if (!req.session.isPopulated && (req.path != '/login' && req.path != '/signup')) {
         console.log("Session expired");
-        res.render('login', {
-            result: ''
-        });
-        return
+        //console.log("Req checking: " + (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax'));
+        if (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax') {
+            res.status(200).send("/login");
+            return
+        } else {
+            res.render('login', {
+                result: ''
+            });
+            return
+        }
     }
     next();
 });
@@ -102,8 +110,7 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                     let buf = new Buffer(100000);
                     fs.readFile(result, function (err, data) {
                         assertion(err);
-                        console.log("Buffer: " + data);
-
+                        //onsole.log("Buffer: " + data);
                         rData.file.buffer = data;
                         rData.file.mimetype = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
                         createNewRecord(db, constructDocument(rData), function (result, doc) {
@@ -244,7 +251,9 @@ app.route('/read').get(function (req, res, next) {
     });
 }).post(upload.none(), function (req, res, next) {
     console.log("Read POST");
-    MongoClient.connect(mongoURL, function (err, client) {
+    MongoClient.connect(mongoURL, {
+        useNewUrlParser: true
+    }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
         retrieveData(db, req.body, function (result, docs = 'No Record to show here!') {
@@ -488,9 +497,9 @@ function createNewRecord(db, data, callback, options = false) {
     }).limit(1).toArray(function (err, docs) {
         assertion(err);
         if (docs.length > 0) {
-            data['restaurant_id'] = parseInt(docs[0].restaurant_id) + 1;
+            data['restaurant_id'] = (parseInt(docs[0].restaurant_id) + 1).toString();
         } else {
-            data['restaurant_id'] = 0;
+            data['restaurant_id'] = "0";
         }
         db.collection('restaurant').insertOne(data, function (err, result) {
             assertion(err);
@@ -599,8 +608,8 @@ function constructDocument(req) {
         'building': req.body.building,
         'zipcode': req.body.zipcode,
         coord: {
-            'lat': req.body.lat,
-            'lon': req.body.lon
+            'lat': checkFloat(req.body.lat),
+            'lon': checkFloat(req.body.lon)
         }
     };
     rawData['grades'] = [];
@@ -638,6 +647,11 @@ function getImageFromURL(imageURL, callback) {
         console.log(error.message);
     });
     req.end();
+}
+
+function checkFloat(data) {
+    let temp = parseFloat(data);
+    return temp ? temp : null;
 }
 
 // function handlingData(data) {

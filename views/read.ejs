@@ -22,6 +22,12 @@
                 <option value="name">Name</option>
                 <option value="cuisine">Cuisine</option>
                 <option value="borough">Borough</option>
+                <option value="restaurant_id">Restaurant ID</option>
+                <option value="address.street">Street</option>
+                <option value="address.building">Building</option>
+                <option value="address.zipcode">Zip Code</option>
+                <option value="owner">Creator</option>
+                <option value="coord" id="coord">Coordinates</option>
             </select>
             <button type="button" class="btn btn-default" id="search">Search</button>
         </div>
@@ -41,21 +47,33 @@
                 </tbody>
            </table>      
         </div>
-         <script>
+         <script type="text/javascript">
             $(document).ready(function(){
             $('#search').click(function(){
+                //Compound data set
                 var s_option = $('#selection option:selected').val();
-                var value = $('#search-data').val();
+                var value, datas = null;  
                 var temp = {};
-                temp[s_option] = value;
-                var datas  = ($.trim(temp[s_option]) == "") ? {} : temp;
+                if (s_option == "coord"){
+                    var lat = parseFloat($.trim($('#coord-lat').val()));
+                    var lon = parseFloat($.trim($('#coord-lon').val()));
+                    temp[s_option+".lat"] = (lat) ? lat :null ; 
+                    temp[s_option+".lon"] = (lon) ? lon :null ;
+                    datas = (temp[s_option+".lat"] || temp[s_option+".lon"]) ? temp:{};
+                } else {
+                    value = $('#search-data').val();
+                    temp[s_option] = value;
+                    datas = ($.trim(temp[s_option]) == "") ? {} : temp;
+                }
+                //Send data set to server and get handle response from server
                 //alert(JSON.stringify(datas));
                 $.ajax({type:'POST',
+                headers:{'resource':'ajax'},
                 url:'/read', 
                 contentType: "application/json",
                 data:JSON.stringify(datas),
                 success:function(result,status, xhr){
-                    alert("Result: "+JSON.stringify(xhr.getResponseHeader('content-type').indexOf('text/html')) + "Result: "+ result);
+                    //alert("Result: "+JSON.stringify(xhr.getResponseHeader('content-type')) + " Result: "+ result + " Status: "+ status);
                     if (typeof result != 'string'){
                         var formatData = '<tbody id="search-tb">'; 
                         for(key in result){
@@ -63,8 +81,8 @@
                         }
                         formatData += '</tbody>';
                          $(formatData).replaceAll("#search-tb");
-                    } else if(xhr.getResponseHeader('content-type').indexOf('text/html')>-1){
-                       window.location.href = '/login';
+                    } else if(status == 'success' && result =="/login"){
+                       window.location.href = result;
                     } else {
                          $('<tbody id="search-tb"><tr><td>'+result+'</td></tr></tabody>').replaceAll("#search-tb");
                     }
@@ -74,6 +92,19 @@
                 }});
             });
             });     
+        </script>
+        <script>
+        $(document).on('change','#selection',function(){           
+            var select = $(this).find('option:selected').attr('value');
+            if(select == "coord"){
+                var coordInput = '<input type="text" id="coord-lat" class="form-control" placeholder="Latitude e.g. 1.000" style="margin:5px;" required><input type="text" id="coord-lon" class="form-control" placeholder="Longtitude e.g. 1.000">';
+                $(coordInput).replaceAll("#search-data");
+            } else {
+                $('<input type="text" id="search-data" class="form-control" required>').replaceAll("#coord-lat");
+                $('#coord-lon').remove();
+           }
+        });
+
         </script>
     </body>
 </html>

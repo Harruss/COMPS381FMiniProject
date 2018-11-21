@@ -13,7 +13,7 @@
     <body>
             <table class="table">
                 <tbody>
-                <tr><td><h2 style="font-style: italic;"><%=result.name%></h2></td></tr>
+                <tr><td><h2 style="font-style: italic;"><%=result.name%></h2><h4><%='( restaurant ID: '+result.restaurant_id+' )'%></h4></td></tr>
                     <% if (result.photo){ %>      
                     <tr><td><img src="data:<%=result.mimetype%>;base64,<%=result.photo%>" alt="Photo" class="img-responsive"></td></tr>         
                     <%}%>
