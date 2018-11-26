@@ -27,7 +27,7 @@ app.use(function (req, res, next) {
     //console.log("Session :" + JSON.stringify(req.session) + " Checking: " + req.session.isPopulated + " req.headers: " + JSON.stringify(req.headers));
     //console.log("Max Age: " + req.sessionOptions.expires);
 
-    if (!req.session.isPopulated && (req.path != '/login' && req.path != '/signup')) {
+    if (!req.session.isPopulated && (req.path != '/login' && req.path != '/signup') && !(req.path.includes("/api/restaurant/"))) {
         //console.log("Session expired: " + JSON.stringify(req.session));
         //console.log("Req checking: " + (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax'));
         if (req.headers.hasOwnProperty('resource') && req.headers.resource == 'ajax') {
@@ -578,7 +578,7 @@ function updateScore(db, data, callback) {
 function editRecord(db, data, callback) {
     let feedBack = handlingEdition(data.data);
     if (feedBack) {
-        console.log("Edit Record: " + (feedBack));
+        console.log("Edit Record: " + JSON.stringify(feedBack));
 
         db.collection('restaurant').updateOne({
             '_id': data.id
@@ -725,8 +725,8 @@ function handlingEdition(data) {
         compoundData['photo'] = new Buffer(data.photo.buffer).toString('base64');
         compoundData['mimetype'] = data.photo.mimetype;
     }
-    console.log("handling data: " + JSON.stringify(compoundData));
-    return compoundData;
+    console.log("Handling data: " + JSON.stringify(compoundData));
+    return (Object.keys(compoundData).length > 0) ? compoundData : null;
 }
 
 app.listen(process.env.PORT || 8099);
