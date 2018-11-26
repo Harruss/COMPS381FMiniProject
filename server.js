@@ -48,9 +48,9 @@ app.use('/api/restaurant/create/:username', function (req, res, next) {
         req.session.username = req.params.username;
         next();
     } else {
-        res.status(200).end(JSON.stringify({
+        res.status(200).json({
             status: 'failed'
-        }));
+        });
     }
 });
 
@@ -59,7 +59,7 @@ app.use('/api/restaurant/read/:key/:value', function (req, res, next) {
         console.log("Request query: " + req.params.key);
         next()
     } else {
-        res.status(200).end('{}');
+        res.status(200).send('{}');
     }
 });
 
@@ -85,19 +85,6 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                 getImageFromURL(rData.body.photo, function (result, mime) {
                     rData.file.buffer = result
                     rData.file.mimetype = mime;
-                    //console.log(JSON.stringify(rData));
-                    createNewRecord(db, constructDocument(rData), function (result, doc) {
-                        if (result) {
-                            res.status(200).end(JSON.stringify({
-                                status: 'ok',
-                                _id: doc
-                            }));
-                        } else {
-                            res.end(JSON.stringify({
-                                status: 'failed'
-                            }));
-                        }
-                    }, true);
                 });
                 //console.log(JSON.stringify("rData structure: " + JSON.stringify(rData.file)));
             } else {
@@ -107,28 +94,28 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                         console.log(err.message);
                         return;
                     }
-                    let buf = new Buffer(100000);
+                    //let buf = new Buffer(100000);
                     fs.readFile(result, function (err, data) {
                         assertion(err);
                         //onsole.log("Buffer: " + data);
                         rData.file.buffer = data;
                         rData.file.mimetype = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
-                        createNewRecord(db, constructDocument(rData), function (result, doc) {
-                            if (result) {
-                                res.status(200).end(JSON.stringify({
-                                    status: 'ok',
-                                    _id: doc
-                                }));
-                            } else {
-                                res.end(JSON.stringify({
-                                    status: 'failed'
-                                }));
-                            }
-                        }, true);
                     });
                 });
             }
         }
+        createNewRecord(db, constructDocument(rData), function (result, doc) {
+            if (result) {
+                res.status(200).json({
+                    status: 'ok',
+                    _id: doc
+                });
+            } else {
+                res.json({
+                    status: 'failed'
+                });
+            }
+        }, true);
     });
 });
 
@@ -139,12 +126,12 @@ app.get('/api/restaurant/read/:key/:value', function (req, res, next) {
         assertion(err);
         let db = client.db('mproject');
         let data = new Object();
-        data[req.params.key] = req.params.value;
+        data[req.params.key.toLowerCase()] = req.params.value;
         retrieveData(db, data, function (result, docs = null) {
             if (result) {
-                res.status(200).end(JSON.stringify(docs));
+                res.status(200).json(docs);
             } else {
-                res.status(200).end('{}');
+                res.status(200).json({});
             }
         })
     });
@@ -416,7 +403,7 @@ app.route('/delete').get(function (req, res, next) {
     });
 });
 
-//Go to map
+//Go to  show google map
 app.get('/map', function (req, res, next) {
     res.render('map', {
         lat: req.query.lat,
@@ -616,13 +603,14 @@ function assertion(err) {
     assert.equal(err, null);
 }
 
+//Make the data in document form
 function constructDocument(req) {
     let rawData = new Object();
     console.log("Construct Document:" + JSON.stringify(req.file));
     rawData['name'] = req.body.name;
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
-    if (req.file) {
+    if (Object.keys(req.file).length > 0) {
         rawData['photo'] = req.file.buffer.toString('base64');
         rawData['mimetype'] = req.file.mimetype;
     } else {
@@ -644,6 +632,7 @@ function constructDocument(req) {
     return rawData;
 }
 
+//Download image from url provided by user
 function getImageFromURL(imageURL, callback) {
     let parsedURL = url.parse(imageURL, true);
     let options = {
@@ -682,17 +671,7 @@ function checkFloat(data) {
     return temp ? temp : "";
 }
 
-// function handlingData(data) {
-//     if (data.length < 1) {
-//         return data
-//     } else if (!data[Object.keys(data)[0]]) {
-//         delete data[Object.keys(data)[0]];
-//         return handlingData(data)
-//     } else {
-//         return data[Object.keys(data)[0]] + handlingData(data)
-//     }
-// }
-
+//Filter the empty field in data
 function handlingEdition(data) {
     let compoundData = new Object();
     for (const key in data.text) {
