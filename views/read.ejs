@@ -55,11 +55,11 @@
                 var value, datas = null;  
                 var temp = {};
                 if (s_option == "coord"){
-                    var lat = parseFloat($.trim($('#coord-lat').val()));
-                    var lon = parseFloat($.trim($('#coord-lon').val()));
-                    temp[s_option+".lat"] = (lat) ? lat :null ; 
-                    temp[s_option+".lon"] = (lon) ? lon :null ;
-                    datas = (temp[s_option+".lat"] || temp[s_option+".lon"]) ? temp:{};
+                    var lat = $.trim($('#coord-lat').val());
+                    var lon = $.trim($('#coord-lon').val());
+                    temp["address."+s_option+".lat"] = (lat) ? lat :null ; 
+                    temp["address."+s_option+".lon"] = (lon) ? lon :null ;
+                    datas = (temp["address."+s_option+".lat"] || temp["address."+s_option+".lon"]) ? temp:{};
                 } else {
                     value = $('#search-data').val();
                     temp[s_option] = value;
@@ -72,7 +72,7 @@
                 url:'/read', 
                 contentType: "application/json",
                 data:JSON.stringify(datas),
-                success:function(result,status, xhr){
+                success:function(result, status, xhr){
                     //alert("Result: "+JSON.stringify(xhr.getResponseHeader('content-type')) + " Result: "+ result + " Status: "+ status);
                     if (typeof result != 'string'){
                         var formatData = '<tbody id="search-tb">'; 

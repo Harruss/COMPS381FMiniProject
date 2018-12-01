@@ -638,8 +638,8 @@ function constructDocument(req) {
         'building': req.body.building,
         'zipcode': req.body.zipcode,
         coord: {
-            'lat': checkFloat(req.body.lat),
-            'lon': checkFloat(req.body.lon)
+            'lat': req.body.lat,
+            'lon': req.body.lon
         }
     };
     rawData['grades'] = [];
@@ -680,12 +680,6 @@ function getImageFromURL(imageURL, callback) {
         console.log(error.message);
     });
     req.end();
-}
-
-//Check the lat.'s and lon.'s data type
-function checkFloat(data) {
-    let temp = parseFloat(data);
-    return temp ? temp : "";
 }
 
 //Filter the empty field in data
