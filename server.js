@@ -79,12 +79,26 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
         rData.session = {
             username: req.session.username
         };
+        console.log("API Receive Data: " + JSON.stringify(rData))
         if (rData.body.hasOwnProperty('photo')) {
             if (rData.body.photo.indexOf('http') >= 0) {
                 console.log(JSON.stringify(rData.body.hasOwnProperty('photo')));
                 getImageFromURL(rData.body.photo, function (result, mime) {
-                    rData.file.buffer = result
+                    rData.file.buffer = result;
                     rData.file.mimetype = mime;
+                    console.log("API URL image:" + JSON.stringify(result));
+                    createNewRecord(db, constructDocument(rData), function (result, doc) {
+                        if (result) {
+                            res.status(200).json({
+                                status: 'ok',
+                                _id: doc
+                            });
+                        } else {
+                            res.json({
+                                status: 'failed'
+                            });
+                        }
+                    }, true);
                 });
                 //console.log(JSON.stringify("rData structure: " + JSON.stringify(rData.file)));
             } else {
@@ -97,25 +111,26 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                     //let buf = new Buffer(100000);
                     fs.readFile(result, function (err, data) {
                         assertion(err);
-                        //onsole.log("Buffer: " + data);
-                        rData.file.buffer = data;
-                        rData.file.mimetype = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
+                        console.log("Buffer: " + data);
+                        rData.file['buffer'] = data;
+                        rData.file['mimetype'] = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
+                        createNewRecord(db, constructDocument(rData), function (result, doc) {
+                            if (result) {
+                                res.status(200).json({
+                                    status: 'ok',
+                                    _id: doc
+                                });
+                            } else {
+                                res.json({
+                                    status: 'failed'
+                                });
+                            }
+                        }, true);
                     });
+
                 });
             }
         }
-        createNewRecord(db, constructDocument(rData), function (result, doc) {
-            if (result) {
-                res.status(200).json({
-                    status: 'ok',
-                    _id: doc
-                });
-            } else {
-                res.json({
-                    status: 'failed'
-                });
-            }
-        }, true);
     });
 });
 
@@ -298,8 +313,9 @@ app.route('/createRestaurant').get(function (req, res, next) {
         },
         function (err, client) {
             let db = client.db('mproject');
+            console.log("Create Records Raw Data: " + req.file);
             let rData = constructDocument(req);
-            console.log(JSON.stringify(rData));
+            console.log("Create Record Constructed Data: " + JSON.stringify(rData));
             createNewRecord(db, rData, function (result) {
                 res.redirect('/read');
             });
@@ -465,7 +481,7 @@ function retrieveData(db, data = {}, callback) {
     db.collection('restaurant').find(data).project({
         'name': 1
     }).sort({
-        'name': 1
+        '$name': 1
     }).toArray(function (err, docs) {
         assertion(err);
         if (docs.length > 0) {
@@ -606,11 +622,11 @@ function assertion(err) {
 //Make the data in document form
 function constructDocument(req) {
     let rawData = new Object();
-    console.log("Construct Document:" + JSON.stringify(req.file));
+    console.log("Construct Document Beginning: " + JSON.stringify(req.file));
     rawData['name'] = req.body.name;
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
-    if (Object.keys(req.file).length > 0) {
+    if (req.file && Object.keys(req.file).length > 0) {
         rawData['photo'] = req.file.buffer.toString('base64');
         rawData['mimetype'] = req.file.mimetype;
     } else {
@@ -628,7 +644,7 @@ function constructDocument(req) {
     };
     rawData['grades'] = [];
     rawData['owner'] = req.session.username;
-    console.log("Construct Document:" + JSON.stringify(rawData));
+    console.log("Construct Document End:" + JSON.stringify(rawData));
     return rawData;
 }
 
@@ -644,6 +660,7 @@ function getImageFromURL(imageURL, callback) {
             'Content-Type': 'image/*'
         }
     };
+    console.log("Get Image From URL: " + JSON.stringify(options));
     let req = http.request(options, function (res) {
         let result = null,
             mime = undefined;
