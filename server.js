@@ -638,8 +638,8 @@ function constructDocument(req) {
         'building': req.body.building,
         'zipcode': req.body.zipcode,
         coord: {
-            'lat': req.body.lat,
-            'lon': req.body.lon
+            'lat': req.body.lat ? req.body.lat : "",
+            'lon': req.body.lon ? req.body.lon : ""
         }
     };
     rawData['grades'] = [];
