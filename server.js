@@ -43,8 +43,9 @@ app.use(function (req, res, next) {
     next();
 });
 app.use('/api/restaurant/create/:username', function (req, res, next) {
+    console.log(req.body.name);
     if (req.params.username && req.body.name) {
-        //console.log(req.params.username);
+        console.log(req.params.username);
         req.session.username = req.params.username;
         next();
     } else {
@@ -111,7 +112,7 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                     //let buf = new Buffer(100000);
                     fs.readFile(result, function (err, data) {
                         assertion(err);
-                        //console.log("Buffer: " + data);
+                        console.log("Buffer: " + data);
                         rData.file['buffer'] = data;
                         rData.file['mimetype'] = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
                         createNewRecord(db, constructDocument(rData), function (result, doc) {
@@ -130,6 +131,19 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
 
                 });
             }
+        } else {
+            createNewRecord(db, constructDocument(rData), function (result, doc) {
+                if (result) {
+                    res.status(200).json({
+                        status: 'ok',
+                        _id: doc
+                    });
+                } else {
+                    res.json({
+                        status: 'failed'
+                    });
+                }
+            }, true);
         }
     });
 });
