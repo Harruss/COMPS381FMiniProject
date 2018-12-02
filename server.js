@@ -82,11 +82,11 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
         console.log("API Receive Data: " + JSON.stringify(rData))
         if (rData.body.hasOwnProperty('photo')) {
             if (rData.body.photo.indexOf('http') >= 0) {
-                console.log(JSON.stringify(rData.body.hasOwnProperty('photo')));
+                //console.log(JSON.stringify(rData.body.hasOwnProperty('photo')));
                 getImageFromURL(rData.body.photo, function (result, mime) {
                     rData.file.buffer = result;
                     rData.file.mimetype = mime;
-                    console.log("API URL image:" + JSON.stringify(result));
+                    //console.log("API URL image:" + JSON.stringify(result));
                     createNewRecord(db, constructDocument(rData), function (result, doc) {
                         if (result) {
                             res.status(200).json({
@@ -111,7 +111,7 @@ app.post('/api/restaurant/create/:username', function (req, res, next) {
                     //let buf = new Buffer(100000);
                     fs.readFile(result, function (err, data) {
                         assertion(err);
-                        console.log("Buffer: " + data);
+                        //console.log("Buffer: " + data);
                         rData.file['buffer'] = data;
                         rData.file['mimetype'] = path.extname(rData.body.photo).replace(/^[\.]/, 'image/');
                         createNewRecord(db, constructDocument(rData), function (result, doc) {
@@ -622,7 +622,7 @@ function assertion(err) {
 //Make the data in document form
 function constructDocument(req) {
     let rawData = new Object();
-    console.log("Construct Document Beginning: " + JSON.stringify(req.file));
+    //console.log("Construct Document Beginning: " + JSON.stringify(req.file));
     rawData['name'] = req.body.name;
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
@@ -633,15 +633,28 @@ function constructDocument(req) {
         rawData['photo'] = null;
         rawData['mimetype'] = null;
     }
-    rawData['address'] = {
-        'street': req.body.street,
-        'building': req.body.building,
-        'zipcode': req.body.zipcode,
-        coord: {
-            'lat': req.body.lat ? req.body.lat : "",
-            'lon': req.body.lon ? req.body.lon : ""
+    if (req.body.address != undefined) {
+        rawData['address'] = {
+            'street': (req.body.address.street != undefined) ? req.body.address.street : "",
+            'building': (req.body.address.building != undefined) ? req.body.address.building : "",
+            'zipcode': (req.body.address.zipcode != undefined) ? req.body.address.zipcode : "",
+            coord: {
+                'lat': (req.body.address.coord != undefined && req.body.address.coord.lat != undefined) ? req.body.address.coord.lat : "",
+                'lon': (req.body.address.coord != undefined && req.body.address.coord.lon != undefined) ? req.body.address.coord.lon : ""
+
+            }
         }
-    };
+    } else {
+        rawData['address'] = {
+            'street': (req.body.street != undefined) ? req.body.street : "",
+            'building': (req.body.building != undefined) ? req.body.building : "",
+            'zipcode': (req.body.zipcode != undefined) ? req.body.zipcode : "",
+            coord: {
+                'lat': req.body.lat ? req.body.lat : "",
+                'lon': req.body.lon ? req.body.lon : ""
+            }
+        }
+    }
     rawData['grades'] = [];
     rawData['owner'] = req.session.username;
     console.log("Construct Document End:" + JSON.stringify(rawData));
