@@ -64,6 +64,7 @@ app.use('/api/restaurant/read/:key/:value', function (req, res, next) {
     }
 });
 
+
 app.route('/').get(function (req, res) {
     res.redirect('/login');
 });
@@ -388,21 +389,32 @@ app.route('/edit').get(function (req, res, next) {
     }, function (err, client) {
         assertion(err);
         let db = client.db('mproject');
-        editRecord(db, {
-            id: ObjectId(req.query.id),
-            data: {
-                text: req.body,
-                photo: (req.file) ? req.file : null
-            }
-        }, function (result) {
-            client.close();
+        retrieveData(db, {
+            owner: req.session.username,
+            _id: ObjectId(req.query.id)
+        }, function (result, docs = "") {
             if (result) {
-                res.redirect('/details?id=' + req.query.id);
+                editRecord(db, {
+                    id: ObjectId(req.query.id),
+                    data: {
+                        text: req.body,
+                        photo: (req.file) ? req.file : null
+                    }
+                }, function (result) {
+                    client.close();
+                    if (result) {
+                        res.redirect('/details?id=' + req.query.id);
+                    } else {
+                        console.log("update edition failed." + result);
+                        res.status(200).send("update edition failed." + result);
+                    }
+                });
             } else {
-                console.log("update edition failed." + result);
-                res.status(200).send("update edition failed." + result);
+                res.status(403).end('Forbidden')
             }
         });
+
+
     });
 });
 
@@ -640,12 +652,12 @@ function constructDocument(req) {
     rawData['name'] = req.body.name;
     rawData['borough'] = req.body.borough;
     rawData['cuisine'] = req.body.cuisine;
-    if (req.file && Object.keys(req.file).length > 0) {
+    if (req.file && Object.keys(req.file).length > 0 && req.file.mimetype.includes("image/")) {
         rawData['photo'] = req.file.buffer.toString('base64');
         rawData['mimetype'] = req.file.mimetype;
     } else {
-        rawData['photo'] = null;
-        rawData['mimetype'] = null;
+        rawData['photo'] = "";
+        rawData['mimetype'] = "";
     }
     if (req.body.address != undefined) {
         rawData['address'] = {

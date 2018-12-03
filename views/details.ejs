@@ -40,10 +40,8 @@
             <%}%>
             <div class="btn-group ">
             <a href="/rate?id=<%=result._id%>" class="btn btn-default">Rate</a>
-            <% if(result.owner === username){%>
                 <a href="/edit?id=<%=result._id%>" class="btn btn-default">Edit</a>
                 <button type="button" class="btn btn-default" data-toggle="modal" data-target="delete" id="btn-del">Delete</button>
-            <%}%>
             <a href="/read" class="btn btn-default">Go Back</a>
             </div>
         </div>
